@@ -1,0 +1,31 @@
+{
+  "name": "bun-ssr-demo",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "PORT=8787 bun run src/index.ts",
+    "build": "bun build src/client.tsx --outdir public",
+    "start": "bun run src/server.ts"
+  },
+  "dependencies": {
+    "@antv/gpt-vis": "^0.5.12",
+    "@hono/zod-validator": "^0.7.6",
+    "@libsql/client": "^0.17.0",
+    "@types/react-dom": "^19.2.3",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^3.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-markdown": "^7.0.0",
+    "server": "react-dom/server",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.5",
+    "@babel/preset-react": "^7.14.5",
+    "babel-loader": "^8.2.2",
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0"
+  }
+}
