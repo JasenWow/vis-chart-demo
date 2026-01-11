@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import Markdown from "react-markdown";
 import { withChartCode, ChartType, Line } from "@antv/gpt-vis";
-import useMCPClient from "./hooks/use-mcp-client";  // 导入自定义 Hook
+import useMCPClient from "./hooks/use-mcp-client"; // 导入自定义 Hook
 
 const CodeBlock = withChartCode({
   components: { [ChartType.Line]: Line },
@@ -21,19 +21,20 @@ Here’s a visualization of Haidilao's food delivery revenue from 2013 to 2022. 
 
 const RenderChart = () => {
   const location = useLocation();
-  const { client, transport, isConnected } = useMCPClient();  // 使用自定义 Hook 获取 client 和 transport
+  const { client, transport, isConnected } = useMCPClient(); // 使用自定义 Hook 获取 client 和 transport
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
     // 解析 URL 查询参数中的 sessionId
     const searchParams = new URLSearchParams(location.search);
-    const sessionId = searchParams.get("sessionId");
-
+    const sessionId = searchParams.get("id");
+    console.log("Session ID from URL:", sessionId);
     // 如果 sessionId 存在，发送请求获取数据
     if (sessionId) {
-      fetch(`/api/chart-data?sessionId=${sessionId}`)
+      fetch(`/api/charts/getOne?id=${sessionId}`)
         .then((response) => response.json())
         .then((data) => {
+          console.log(data);
           setChartData(data);
         })
         .catch((error) => {
@@ -50,23 +51,21 @@ const RenderChart = () => {
 
     try {
       const res = await client.callTool({
-        name: "generate_bar_chart",
+        name: "generate_line_chart",
         arguments: {
           data: [
-            {
-              category: "分类一",
-              value: 10,
-            },
+            { time: "2013", value: 59.3 },
+            { time: "2014", value: 64.4 },
+            { time: "2015", value: 68.9 },
+            { time: "2016", value: 74.4 },
+            { time: "2017", value: 82.7 },
+            { time: "2018", value: 91.9 },
+            { time: "2019", value: 99.1 },
+            { time: "2020", value: 101.6 },
+            { time: "2021", value: 114.4 },
+            { time: "2022", value: 121 },
           ],
-          stack: false,
-          style: {},
-          theme: "default",
-          width: 600,
-          height: 400,
-          title: "",
-          axisXTitle: "",
-          axisYTitle: "",
-          sessionId: "1",
+          sessionId: 1,
         },
       });
 
@@ -78,13 +77,18 @@ const RenderChart = () => {
   }, [client, transport]);
 
   if (!chartData) {
-    return <div>Loading chart data...</div>;
+    return (
+      <div>
+        <button onClick={handleGenerateChart}>Generate Bar Chart</button>
+        <div>Loading chart data...</div>
+      </div>
+    );
   }
 
   // 格式化模板，将 {chartData} 替换为实际的 JSON 数据
   const updatedMarkdown = markdownTemplate.replace(
     "{chartData}",
-    JSON.stringify(chartData, null, 2)  // 格式化 JSON 为美观的字符串
+    JSON.stringify(chartData, null, 2) // 格式化 JSON 为美观的字符串
   );
 
   return (
@@ -92,7 +96,10 @@ const RenderChart = () => {
       {isConnected ? (
         <div>
           <button onClick={handleGenerateChart}>Generate Bar Chart</button>
-          <Markdown components={{ code: CodeBlock }} children={updatedMarkdown} />
+          <Markdown
+            components={{ code: CodeBlock }}
+            children={updatedMarkdown}
+          />
         </div>
       ) : (
         <div>Connecting to MCP...</div>
