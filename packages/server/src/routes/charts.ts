@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { chartsTable, sessionsTable } from "../db/schema";
 
 const chartCreateSchema = z.object({
@@ -13,7 +13,6 @@ const chartCreateSchema = z.object({
 
 const app = new Hono()
   .post("/createOne", zValidator("json", chartCreateSchema), async (c) => {
-    console.log(c.req.json());
     const data = c.req.valid("json");
 
     const exist = await db.query.sessionsTable.findFirst({
@@ -44,10 +43,27 @@ const app = new Hono()
       resultObj: `http://localhost:8787/charts?id=${chart!.id}`,
       errorMessage: "",
     };
-    console.log("========");
-    console.log(res);
+
     return c.json(res);
   })
+  .post(
+    "/getAll",
+    zValidator("json", z.object({ ids: z.array(z.any()) })),
+    async (c) => {
+      const { ids } = c.req.valid("json");
+
+      const charts = await db.query.chartsTable.findMany({
+        where: () => inArray(chartsTable.id, ids),
+      });
+
+      const res = charts.map((i) => {
+        return {
+          ...JSON.parse(i.data!),
+        };
+      });
+      return c.json(res);
+    }
+  )
   .get(
     "/getOne",
     zValidator("query", z.object({ id: z.string() })),
