@@ -1,11 +1,14 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // 导入 useNavigate
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Markdown from "react-markdown";
-import { withChartCode, ChartType, Line } from "@antv/gpt-vis";
-import useMCPClient from "./hooks/use-mcp-client"; // 导入自定义 Hook
+import { withChartCode, ChartType, Line, Bar } from "@antv/gpt-vis";
+import useMCPClient from "./hooks/use-mcp-client";
 
 const CodeBlock = withChartCode({
-  components: { [ChartType.Line]: Line },
+  components: {
+    [ChartType.Line]: Line,
+    [ChartType.Bar]: Bar,
+  },
 });
 
 // markdown 模板内容，使用占位符 `{chartData}`
@@ -20,10 +23,9 @@ Here’s a visualization of Haidilao's food delivery revenue from 2013 to 2022. 
 `;
 
 const RenderChart = () => {
-  const { client, transport, isConnected } = useMCPClient(); // 使用自定义 Hook 获取 client 和 transport
-  const navigate = useNavigate(); // 使用 useNavigate 来更新路由
+  const { client, transport, isConnected } = useMCPClient();
+  const navigate = useNavigate();
   const [chartData, setChartData] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
 
   useEffect(() => {
     // 解析 URL 查询参数中的 sessionId
@@ -42,7 +44,7 @@ const RenderChart = () => {
           console.error("Error fetching chart data:", error);
         });
     }
-  }, [location]);
+  }, []);
 
   /** Add your agent logic here */
   const handleGenerateChart = useCallback(async () => {
@@ -53,20 +55,9 @@ const RenderChart = () => {
 
     try {
       const res = await client.callTool({
-        name: "generate_line_chart",
+        name: "generate_bar_chart",
         arguments: {
-          data: [
-            { time: "2013", value: 59.3 },
-            { time: "2014", value: 64.4 },
-            { time: "2015", value: 68.9 },
-            { time: "2016", value: 74.4 },
-            { time: "2017", value: 82.7 },
-            { time: "2018", value: 91.9 },
-            { time: "2019", value: 99.1 },
-            { time: "2020", value: 101.6 },
-            { time: "2021", value: 114.4 },
-            { time: "2022", value: 121 },
-          ],
+          data: [{ category: "2013", value: 59.3 }],
           sessionId: 1,
         },
       });
@@ -75,13 +66,8 @@ const RenderChart = () => {
         text: string;
       }>;
       console.log("Generated chart response:", res);
-      
-      let newSessionId = content[0].text; // 获取返回的 sessionId
-      // 如果返回的是完整的 URL，提取 id 部分
-      const url = new URL(newSessionId);
-      newSessionId = url.searchParams.get("id"); // 提取 `id` 参数
 
-      setSessionId(newSessionId); // 更新 sessionId 状态
+      const newSessionId = content[0].text; // 获取返回的 sessionId
 
       // 使用新的 sessionId 发送请求获取数据
       fetch(`/api/charts/getOne?id=${newSessionId}`)
@@ -96,7 +82,6 @@ const RenderChart = () => {
 
       // 更新 URL 查询参数
       navigate(`?id=${newSessionId}`, { replace: true }); // 更新 URL 中的查询参数
-
     } catch (error) {
       console.error("Error generating chart:", error);
     }
