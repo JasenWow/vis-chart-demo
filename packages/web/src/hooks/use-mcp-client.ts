@@ -11,7 +11,7 @@ const useMCPClient = () => {
   useEffect(() => {
     const newClient = new Client({ name: "bun-client", version: "1.0.0" });
     const newTransport = new StreamableHTTPClientTransport(
-      new URL(import.meta.env.REACT_APP_MCP_SERVER_CHART_URL)
+      new URL(import.meta.env.VITE_MCP_SERVER_CHART_URL)
     );
 
     const connectClient = async () => {
