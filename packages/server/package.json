@@ -1,6 +1,8 @@
 {
-  "name": "bun-ssr-demo",
+  "name": "server",
   "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
     "dev": "PORT=8787 bun run src/index.ts",
     "build": "bun build src/client.tsx --outdir public",
